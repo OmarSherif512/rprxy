@@ -1,0 +1,26 @@
+{
+  "name": "roblox-thumbnail-proxy",
+  "version": "1.0.0",
+  "description": "A proxy server that returns Roblox game icons and thumbnails by game ID",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "roblox",
+    "proxy",
+    "thumbnails",
+    "express"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^3.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
