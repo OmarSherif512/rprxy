@@ -1,32 +1,40 @@
-const express = require("express");
-const axios = require("axios");
+import express from "express";
+import fetch from "node-fetch";
 const app = express();
+const PORT = 3000;
 
-const PORT = process.env.PORT || 10000;
-
-app.get("/universes/v1/places/:placeId/universe", async (req, res) => {
+app.get("/roblox/game/:placeId", async (req, res) => {
+  try {
     const placeId = req.params.placeId;
 
-    try {
-        // Step 1: get universeId
-        const uniResp = await axios.get(`https://apis.roblox.com/universes/v1/places/${placeId}/universe`);
-        const universeId = uniResp.data.universeId;
+    // 1️⃣ Convert to Universe ID
+    const convert = await fetch(`https://games.roblox.com/v1/games/multiget-place-details?placeIds=${placeId}`);
+    const convertData = await convert.json();
+    if (!convertData?.length) return res.status(404).json({ error: "Invalid Place ID" });
+    const universeId = convertData[0].universeId;
 
-        // Step 2: get game info
-        const gameResp = await axios.get(`https://games.roblox.com/v1/games?universeIds=${universeId}`);
+    // 2️⃣ Game Icon
+    const iconUrl = `https://thumbnails.roblox.com/v1/games/icons?universeIds=${universeId}&size=768x432&format=png`;
+    const iconReq = await fetch(iconUrl);
+    const iconData = await iconReq.json();
 
-        // Step 3: get game thumbnail (optional)
-        const thumbResp = await axios.get(`https://thumbnails.roblox.com/v1/games/icons?universeIds=${universeId}&size=150x150&format=Png&isCircular=false`);
+    // 3️⃣ Thumbnails / Media
+    const thumbUrl = `https://games.roblox.com/v2/games/${universeId}/media`;
+    const thumbReq = await fetch(thumbUrl);
+    const thumbData = await thumbReq.json();
 
-        res.json({
-            gameInfo: gameResp.data,
-            thumbnail: thumbResp.data
-        });
+    // 📦 Respond with aggregated JSON
+    res.json({
+      placeId,
+      universeId,
+      icon: iconData?.data?.[0]?.imageUrl ?? null,
+      thumbnails: thumbData ?? []
+    });
 
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Proxying failed");
-    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Proxy error");
+  }
 });
 
-app.listen(PORT, () => console.log(`Proxy server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Roblox proxy running on ${PORT}`));
